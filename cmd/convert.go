@@ -3,6 +3,7 @@ package cmd
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/spf13/cobra"
 	"log"
@@ -13,37 +14,41 @@ import (
 var ConvertCmd = &cobra.Command{
 	Use:   "conf-to-json [filename]",
 	Short: "conf-to-json converts conf files to JSON objects",
-	Args: func(cmd *cobra.Command, args []string) error {
-		// Optionally run one of the validators provided by cobra
-		if err := cobra.MinimumNArgs(1)(cmd, args); err != nil {
-			return err
-		}
-		_, err := os.OpenFile(args[0], os.O_RDONLY, 0)
-		if os.IsNotExist(err) {
-			return fmt.Errorf("specified file does not exist")
-		}
-		if err != nil {
-			return fmt.Errorf("invalid color specified: %s", args[0])
-		}
-		return nil
-	},
-	Run: convertConfToJson,
+	Args:  cobra.ArbitraryArgs,
+	Run:   convertConfToJson,
+}
+
+func init() {
+	ConvertCmd.Flags().StringP("file", "f", "", "input file to convert")
 }
 
 func convertConfToJson(cmd *cobra.Command, args []string) {
 	result := map[string][]string{}
-	filename := args[0]
+	var scanner *bufio.Scanner
+	if filename, _ := cmd.Flags().GetString("file"); filename != "" {
+		file, err := os.Open(filename)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer file.Close()
 
-	file, err := os.Open(filename)
-	if err != nil {
-		log.Fatal(err)
+		scanner = bufio.NewScanner(file)
+	} else {
+		file := os.Stdin
+		fi, err := file.Stat()
+		if err != nil {
+			log.Fatal(err)
+		}
+		size := fi.Size()
+		if size == 0 {
+			err = errors.New("stdin is empty")
+			log.Fatal(err)
+		}
+		scanner = bufio.NewScanner(os.Stdin)
 	}
-	defer file.Close()
 
-	scanner := bufio.NewScanner(file)
 	// optionally, resize scanner's capacity for lines over 64K, see next example
 	for scanner.Scan() {
-		fmt.Println(scanner.Text())
 		key, value, err := convertLineToKeyValue(scanner.Text())
 		if err != nil {
 			log.Fatal(err)
@@ -62,6 +67,10 @@ func convertConfToJson(cmd *cobra.Command, args []string) {
 	}
 
 	output, err := json.Marshal(result)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	fmt.Println(string(output))
 }
 
