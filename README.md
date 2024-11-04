@@ -19,3 +19,16 @@ EOL
 
 conf-to-json nginx.conf
 ```
+
+## Resulting conversions
+
+```none
+port 80 -> "port": ["80"]
+port -> "port": []
+port 80 8080 -> "port": ["80", "8080"]
+
+# Appends multiples
+port 80
+port 8080
+-> "port": ["80", "8080"]
+```

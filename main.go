@@ -1,7 +1,19 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"main/cmd"
+	"os"
+)
 
 func main() {
-	fmt.Println("Hello World")
+
+	var rootCmd = cmd.ConvertCmd
+
+	//rootCmd.AddCommand(cmd.VerifyCmd())
+
+	if err := rootCmd.Execute(); err != nil {
+		_, _ = fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 }
