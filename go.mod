@@ -1,4 +1,4 @@
-module main
+module github.com/chris-cmsoft/conftojson
 
 go 1.23.2
 

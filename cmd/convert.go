@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/chris-cmsoft/conftojson/pkg"
 	"github.com/spf13/cobra"
 	"log"
-	"main/pkg"
 	"os"
 )
 
@@ -48,7 +48,7 @@ func convert(cmd *cobra.Command, args []string) {
 
 	result, err := pkg.ConvertConfToMap(scanner)
 
-	output, err := json.Marshal(result)
+	output, err := json.MarshalIndent(result, "", "	")
 	if err != nil {
 		log.Fatal(err)
 	}
